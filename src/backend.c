@@ -431,9 +431,12 @@ void *backend_map_granted_ring(xen_backend_t xenback, int devid)
     int ring;
     int rc;
 
-    rc = xs_read_fe_int(xendev, "ring-ref", &ring);
-    if (rc)
-        return NULL;
+    rc = xs_read_fe_int(xendev, "page-gref", &ring);
+    if (rc) {
+        rc = xs_read_fe_int(xendev, "ring-ref", &ring);
+        if (rc)
+            return NULL;
+    }
 
     return xc_gnttab_map_grant_ref(xcg_handle, xenback->domid,
                                    ring, PROT_READ | PROT_WRITE);
