@@ -25,17 +25,14 @@ struct xs_handle *xs_handle = NULL;
 static char domain_path[PATH_BUFSZ];
 static int domain_path_len = 0;
 
-int backend_init(int backend_domid)
+int backend_init_noxc(int backend_domid)
 {
+    xc_handle = NULL;
     char *tmp;
 
     xs_handle = xs_open(XS_UNWATCH_FILTER);
     if (!xs_handle)
         goto fail_xs;
-
-    xc_handle = xc_interface_open(NULL, NULL, 0);
-    if (!xc_handle)
-        goto fail_xc;
 
     xcg_handle = xc_gnttab_open(NULL, 0);
     if (!xcg_handle)
@@ -53,12 +50,25 @@ fail_domainpath:
     xc_gnttab_close(xcg_handle);
     xcg_handle = NULL;
 fail_xcg:
-    xc_interface_close(xc_handle);
-    xc_handle = NULL;
-fail_xc:
     xs_daemon_close(xs_handle);
     xs_handle = NULL;
 fail_xs:
+    return -1;
+}
+
+int backend_init(int backend_domid)
+{
+    int ret = backend_init_noxc(backend_domid);
+    if (ret)
+        return ret;
+
+    xc_handle = xc_interface_open(NULL, NULL, 0);
+    if (xc_handle)
+        return 0;
+
+    xc_interface_close(xc_handle);
+    xc_handle = NULL;
+
     return -1;
 }
 
@@ -402,6 +412,9 @@ void *backend_map_shared_page(xen_backend_t xenback, int devid)
     struct xen_device *xendev = &xenback->devices[devid];
     int mfn;
     int rc;
+
+    if (xc_handle == NULL)
+        return NULL;
 
     rc = xs_read_fe_int(xendev, "page-ref", &mfn);
     if (rc)
