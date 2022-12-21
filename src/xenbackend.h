@@ -161,6 +161,19 @@ int frontend_scan(xen_backend_t xenback, int devid, const char *node, const char
 int backend_init(int backend_domid);
 
 /**
+ * Initialise the file descriptors required to interact with Xen toolstack
+ * component: xenstore, grant-tables, and retrieve the domain path.
+ * backend_close() is expected to be called to release resources.
+ *
+ * Notably this doesn't use xenctrl.
+ *
+ * @param backend_domid domid of the domain where the backend is handled.
+ *
+ * @return 0 on success, else -1 and pass on /errno/.
+ */
+int backend_init_noxc(int backend_domid);
+
+/**
  * Close file descriptors with Xen toolstack components: xenstore, xenctrl,
  * grant-tables.
  *
