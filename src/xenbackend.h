@@ -80,7 +80,7 @@ extern "C"
      *   even switch directly to "Connected"). This is usually when
      *   event-channels are bound.
      *   Called when the backend is waiting for the frontend to complete the
-     *   connection (bacjend in "Init. Wait") state.
+     *   connection (backend in "Init. Wait") state.
      *
      * - disconnect()
      *   @param xendev  xen_device_t object.
